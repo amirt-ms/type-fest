@@ -36,6 +36,13 @@ export type PartialDeepOptions = {
 	```
 	*/
 	readonly allowUndefinedInNonTupleArrays?: boolean;
+
+	/**
+	Types to not recurse into. These types will still be made optional.
+ 	
+  	@default recurse into all objects
+	*/
+	readonly exceptObjects?: object
 };
 
 /**
@@ -106,7 +113,11 @@ export type PartialDeep<T, Options extends PartialDeepOptions = {}> = T extends 
 										: Array<PartialDeep<Options['allowUndefinedInNonTupleArrays'] extends false ? ItemType : ItemType | undefined, Options>>
 									: PartialObjectDeep<T, Options> // Tuples behave properly
 								: T // If they don't opt into array testing, just use the original type
-							: PartialObjectDeep<T, Options>
+							: Options['exceptObjects'] extends false // If they don't list any exceptObjects, recurse into all objects
+						                ? PartialObjectDeep<T, Options>
+						                : Options['exceptObjects'] extends T // Test if the type is in the exceptObjects
+						                	? T
+						                	: PartialObjectDeep<T, Options>
 						: unknown;
 
 /**
